@@ -26,12 +26,30 @@ def load_dataset():
 	return X_train, X_dev, Y_train, Y_dev
 
 def load_test_dataset():
-	X_test = np.load('test.py')
+	'''
+	Load unlabeled dataset to produce predictions for onine Kaggle MNIST submission.
+	'''
+	X_test = np.load('test.npy')
 
 	return X_test
 
 def create_placeholders(n_x, n_y):
+	'''
+	Creates the placeholders for the tensorflow session.
+    
+    Arguments:
+    n_x -- scalar, size of an image vector (num_px * num_px = 64 * 64 * 3 = 12288)
+    n_y -- scalar, number of classes (from 0 to 5, so -> 6)
+    
+    Returns:
+    X -- placeholder for the data input, of shape [n_x, None] and dtype "float"
+    Y -- placeholder for the input labels, of shape [n_y, None] and dtype "float"
+	'''
 
+	X = tf.placeholder([n_x, None], dtype=tf.float32, name='X')
+	Y = tf.placeholder([n_x, None], dtype=tf.float32, name='Y')
+
+	return X, Y
 	
 
 def initialize_parameters(num_layers, nn_dims):
@@ -119,8 +137,9 @@ def compute_cost(logits, labels):
     
     return cost
 
-def forward_propagation():
-	None
+def create_minibatches(X_train, Y_train, minibatch_size):
+
+	
 
 def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
@@ -136,6 +155,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	parameters = initialize_parameters()
 	lin_out = forward_propagation(X, parameters)
 	cost = compute_cost(lin_out, Y)
+	optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 	# Initialize all the variables
     init = tf.global_variables_initializer()
@@ -144,19 +164,79 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Run initialization
 		sess.run(init)
 
+		# Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
+		num_minibatches = int(m / minibatch_size)
+		minibatches = create_minibatches(X_train, Y_train, minibatch_size)
+
 		# Mini-batch stochastic training loop...
-		for epoch in range(num_epochs):
-
+		for epoch in range(1:num_epochs):
 			epoch_cost = 0.0
-			num_minibatches = int(m / minibatch_size)
+
+			for minibatch in minibatches:
+				(minibatch_X, minibatch_Y) = minibatch
+
+				_, minibatch_cost = sess.run([optimizer,cost], feed_dict={X: minibatch_X, Y: minibatch_Y})
+
+				epoch_cost += minibatch_cost / num_minibatches
+
+			# Print the cost every 100 epochs
+            if print_cost and epoch % 100 == 0:
+                print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
+            if print_cost and epoch % 10 == 0:
+                costs.append(epoch_cost)
+
+    # Plot costs over epochs
+    plt.plot(np.squeeze(costs))
+    plt.ylabel('Cost')
+    plt.xlabel("Iterations (Per 10's)")
+    plt.title("Learning rate =" + str(learning_rate))
+    plt.savefig('CostCurve_'+learning_rate)
+
+    # Save trained parameters
+    parameters = sess.run(parameters)
+    print ("Training complete!")
+
+    # Calculate the correct predictions
+    correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y))
+
+    # Calculate accuracy on the test set
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+
+    print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
+    print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
+
+    sess.close()
+    
+    return parameters
 
 
-
-def predict_on_test():
+# TODO: DOES THIS WORK PROEPERLY???
+def predict_on_test(trained_params):
+	# Get unlabeled testing examples
 	X_test = load_test_dataset()
 
+	# Normalize image vectors
+	X_test = X_test / 255.0
 
+	ops.reset_default_graph()
 
+	n_x = X_test.shape[0]   # Number of pixels in each image / number of input features                                      
+    costs = []              # Keep track of model's cost after each epoch for plotting
+
+    # Construct Tensorflow graph
+	X, _ = create_placeholders(n_x, 10)
+	lin_out = forward_propagation(X_test, parameters)
+	predictions = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
+
+	with tf.Session as sess:
+		sess.run(predictions)
+
+	sess.close()
+
+	# TODO: Conver this simple print statement to the output specification given by Kaggle
+	print(predictions)
+
+# MAIN COMPUTATION DRIVER
 
 X_train, X_dev, Y_train, Y_dev = load_dataset()
 
@@ -169,7 +249,10 @@ Y_train = convert_to_one_hot(Y_train, 10)
 Y_dev   = convert_to_one_hot(Y_dev, 10)
 
 # Train model and calculate training/development set accuracies
-model(X_train, Y_train, X_dev, Y_dev)
+trained_params = model(X_train, Y_train, X_dev, Y_dev)
+
+# Produce
+predict_on_test(trained_params)
 
 
 
