@@ -19,6 +19,7 @@ def load_dataset():
 
 	# Split dataset into training set (70%) and development set (30%)
 	m_t = int(np.ceil(m * 0.7)); print('Number of examples in training set: ', m_t)
+	m_d = m - m_t; print('Number of examples in development set: ', m_d)
 
 	X_train = X_data[:m_t,:].T
 	Y_train = Y_data[:m_t]
@@ -49,31 +50,33 @@ def create_placeholders(n_x, n_y):
 	'''
 
 	X = tf.placeholder([n_x, None], dtype=tf.float32, name='X')
-	Y = tf.placeholder([n_x, None], dtype=tf.float32, name='Y')
+	Y = tf.placeholder([n_y, None], dtype=tf.float32, name='Y')
 
 	return X, Y
 	
 
-def initialize_parameters(num_layers, nn_dims):
+def initialize_parameters(nn_dims):
 	'''
 	Initializes weights randomly with Xavier initialization and biases with zeros.
 
 	Arguments:
-	num_layers - MIGHT BE USELESS (Try len(nn_dims)) - number of layers in DNN
-	nn_dims - array that holds the shapes of each layer's weight/bias tensors.
+	nn_dims - Dictionary that holds the shapes of each layer's weight/bias tensors.
 
 	Returns:
-	parameters - Dictionary holding weights and biases for 
+	parameters - Dictionary holding weights and bias tensors for Tensorflow graph 
 	'''
-	parameters = {} # Create empty dictionary
 
-	for i in range(1,num_layers+1):
-		parameters['W'+i] = tf.get_variable('W'+i, nn_dims[i,0], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-		parameters['b'+i] = tf.get_variable('b'+i, nn_dims[i,1], initializer = tf.zeros_intializer())
+	parameters = {}
+	print("len(nn_dims) = " + str(len(nn_dims)//2))
+
+	for i in range(1,len(nn_dims)//2):
+		w = 'W'+str(i); b = 'b'+str(i)
+		parameters[w] = tf.get_variable(w, nn_dims[w], initializer=tf.contrib.layers.xavier_initializer(seed = 1))
+		parameters[b] = tf.get_variable(b, nn_dims[b], initializer=tf.zeros_initializer())
 
 	return parameters
 
-def convert_to_one_hot(labels, num_classes):
+def convert_to_one_hot(labels, num_classes=10):
 	'''
 	Creates a matrix where the i-th row corresponds to the i-th class number and the j-th column
 	    corresponds to the j-th training example. i.e. If example j has label i, entry (i,j) 
@@ -87,29 +90,31 @@ def convert_to_one_hot(labels, num_classes):
 	one_hot - matrix that holds a one in the k-th row of each column
 	'''
 
-	# Create a tf.constant equal to C (depth), name it 'C'. (approx. 1 line)
+	# Create a tf.constant equal to C (depth), name it 'C'.
 	C = tf.constant(num_classes, name="C")
 
-	# Use tf.one_hot, be careful with the axis (approx. 1 line)
+	# Use tf.one_hot, be careful with the axis 
 	one_hot_matrix = tf.one_hot(labels, C, axis=0)
 
-	# Create the session (approx. 1 line)
+	# Create the session
 	sess = tf.Session()
 
-	# Run the session (approx. 1 line)
+	# Run the session
 	one_hot = sess.run(one_hot_matrix)
 
-	# Close the session (approx. 1 line). See method 1 above.
+	# Close the session
 	sess.close()
 
 	return one_hot
 
 def forward_propagation(X, parameters, num_layers):    
-	# Retrieve the parameters from the dictionary "parameters" 
 	A = X;
 	for i in range(1,num_layers):
-		W = parameters['W'+i]
-		b = parameters['b'+i]
+		# Retrieve the parameters from the dictionary "parameters" 
+		W = parameters['W'+str(i)]
+		b = parameters['b'+str(i)]
+
+		# Z[l+1] = W[l]*A[l] + b[l]
 		Z = tf.add(tf.matmul(W,A),b)
 
 		# Calculate activation only if 
@@ -190,7 +195,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	# Plot costs over epochs
 	plt.plot(np.squeeze(costs))
 	plt.ylabel('Cost')
-	plt.xlabel("Iterations (Per 10's)")
+	plt.xlabel("Iterations (Per 10 Iter.)")
 	plt.title("Learning rate =" + str(learning_rate))
 	plt.savefig('CostCurve_'+learning_rate)
 
@@ -205,7 +210,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
 	print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
-	print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
+	print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
 
 	sess.close()
 
@@ -260,25 +265,42 @@ Y_dev   = convert_to_one_hot(Y_dev, 10)
 def compute_matrix_dims(layer_sizes):
 	'''
 	Computes matrix dimensions for each layer
+
+	Arguments:
+	layer_sizes - List containing numbers of neurons in each layer
+
+	Asserts:
+	n_layers > 2 - Ensures model is at least 2 layers deep
+
+	Returns:
+	nn_dims - Dictionary containing tuples of matrix shapes for each layer's weights
+		and biases
+
 	'''
-	nn_dims = []
+	nn_dims = {}
 	n_layers = len(layer_sizes)
 
 	# Ensure deep learning model
 	assert n_layers > 2
 
-	layer_prev = layer_sizes[0]
+	# Build nn_dims list holding matrix sizes
+	layer_curr = layer_sizes[0]
 	layer_next = layer_sizes[1]
-	for i in range(n_layers):
-		nn_dims[i] = (layer_next,layer_prev)
-
+	for i in range(n_layers-1):
+		nn_dims["W"+str(i+1)] = (layer_curr,layer_next)
+		nn_dims['b'+str(i+1)] = (layer_next,1)
+		layer_curr = layer_next
+		layer_next = layer_sizes[i+1]
+		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
+			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
 
 	return nn_dims
 
-
 # TEST:
-layer_sizes = [786, 12, 10]
+layer_sizes = [28**2, 12, 10]
 nn_dims = compute_matrix_dims(layer_sizes)
+parameters = initialize_parameters(nn_dims)
+print(parameters)
 
 
 
