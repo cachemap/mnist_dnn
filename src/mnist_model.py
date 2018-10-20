@@ -30,23 +30,23 @@ def load_dataset():
 
 def load_test_dataset():
 	'''
-	Load unlabeled dataset to produce predictions for onine Kaggle MNIST submission.
+	Load unlabeled dataset to produce predictions for online Kaggle MNIST submission.
 	'''
-	X_test = np.load('../data/test.npy')
+	X_eval = np.load('../data/test.npy')
 
-	return X_test
+	return X_eval
 
 def create_placeholders(n_x, n_y):
 	'''
 	Creates the placeholders for the tensorflow session.
     
     Arguments:
-    n_x -- scalar, size of an image vector (num_px * num_px = 64 * 64 * 3 = 12288)
-    n_y -- scalar, number of classes (from 0 to 5, so -> 6)
+    n_x - scalar, size of an image vector (num_px * num_px = 64 * 64 * 3 = 12288)
+    n_y - scalar, number of classes (from 0 to 5, so -> 6)
     
     Returns:
-    X -- placeholder for the data input, of shape [n_x, None] and dtype "float"
-    Y -- placeholder for the input labels, of shape [n_y, None] and dtype "float"
+    X - placeholder for the data input, of shape [n_x, None] and dtype "float"
+    Y - placeholder for the input labels, of shape [n_y, None] and dtype "float"
 	'''
 
 	X = tf.placeholder([n_x, None], dtype=tf.float32, name='X')
@@ -245,15 +245,15 @@ def predict_on_test(trained_params):
 
 # MAIN COMPUTATION DRIVER
 
-X_train, X_dev, Y_train, Y_dev = load_dataset()
+# X_train, X_dev, Y_train, Y_dev = load_dataset()
 
 # Normalize image vectors
-X_train = X_train / 255.0
-X_dev   = X_dev / 255.0
+# X_train = X_train / 255.0
+# X_dev   = X_dev / 255.0
 
 # Convert labels to one-hot matrices
-Y_train = convert_to_one_hot(Y_train, 10)
-Y_dev   = convert_to_one_hot(Y_dev, 10)
+# Y_train = convert_to_one_hot(Y_train, 10)
+# Y_dev   = convert_to_one_hot(Y_dev, 10)
 
 # Train model and calculate training/development set accuracies
 #trained_params = model(X_train, Y_train, X_dev, Y_dev)
@@ -278,29 +278,32 @@ def compute_matrix_dims(layer_sizes):
 
 	'''
 	nn_dims = {}
-	n_layers = len(layer_sizes)
+	n_layers = len(layer_sizes)-1
 
 	# Ensure deep learning model
 	assert n_layers > 2
 
 	# Build nn_dims list holding matrix sizes
-	layer_curr = layer_sizes[0]
-	layer_next = layer_sizes[1]
-	for i in range(n_layers-1):
-		nn_dims["W"+str(i+1)] = (layer_curr,layer_next)
-		nn_dims['b'+str(i+1)] = (layer_next,1)
-		layer_curr = layer_next
-		layer_next = layer_sizes[i+1]
-		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
-			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
+	layer_prev = layer_sizes[0]
+	layer_curr = layer_sizes[1]
+	for i in range(1,n_layers+1):
+		nn_dims["W"+str(i)] = (layer_curr,layer_prev)
+		layer_prev = layer_curr
+		layer_curr = layer_sizes[i]
+		nn_dims['b'+str(i)] = (layer_curr,1)
+		
+		print("W" + str(i) + " = " + str(nn_dims['W'+str(i)]) + ", "
+			+ "b" + str(i) + " = " + str(nn_dims['b'+str(i)]))
 
 	return nn_dims
 
 # TEST:
-layer_sizes = [28**2, 12, 10]
+layer_sizes = [28**2, 12, 12, 10]
 nn_dims = compute_matrix_dims(layer_sizes)
 parameters = initialize_parameters(nn_dims)
-print(parameters)
+
+for params in parameters:
+	print(params)
 
 
 
