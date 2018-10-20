@@ -284,16 +284,14 @@ def compute_matrix_dims(layer_sizes):
 	assert n_layers > 2
 
 	# Build nn_dims list holding matrix sizes
-	layer_prev = layer_sizes[0]
-	layer_curr = layer_sizes[1]
-	for i in range(1,n_layers+1):
-		nn_dims["W"+str(i)] = (layer_curr,layer_prev)
-		layer_prev = layer_curr
-		layer_curr = layer_sizes[i]
-		nn_dims['b'+str(i)] = (layer_curr,1)
-		
-		print("W" + str(i) + " = " + str(nn_dims['W'+str(i)]) + ", "
-			+ "b" + str(i) + " = " + str(nn_dims['b'+str(i)]))
+	for i in range(0,n_layers):
+		layer_prev = layer_sizes[i]
+		layer_curr = layer_sizes[i+1]
+		nn_dims["W"+str(i+1)] = (layer_curr,layer_prev)
+		nn_dims['b'+str(i+1)] = (layer_curr,1)
+
+		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
+			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
 
 	return nn_dims
 
