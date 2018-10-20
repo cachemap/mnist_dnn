@@ -64,8 +64,8 @@ def compute_matrix_dims(layer_sizes):
 		nn_dims["W"+str(i+1)] = (layer_curr,layer_prev)
 		nn_dims['b'+str(i+1)] = (layer_curr,1)
 
-		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
-			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
+		#print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
+		#	+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
 
 	return nn_dims
 
@@ -82,8 +82,8 @@ def create_placeholders(n_x, n_y):
     Y - placeholder for the input labels, of shape [n_y, None] and dtype "float"
 	'''
 
-	X = tf.placeholder([n_x, None], dtype=tf.float32, name='X')
-	Y = tf.placeholder([n_y, None], dtype=tf.float32, name='Y')
+	X = tf.placeholder(dtype=tf.float32, shape=(n_x, None), name='X')
+	Y = tf.placeholder(dtype=tf.float32, shape=(n_y, None), name='Y')
 
 	return X, Y
 	
@@ -100,7 +100,6 @@ def initialize_parameters(nn_dims):
 	'''
 
 	parameters = {}
-	print("len(nn_dims) = " + str(len(nn_dims)//2))
 
 	for i in range(1,len(nn_dims)//2):
 		w = 'W'+str(i); b = 'b'+str(i)
@@ -140,9 +139,11 @@ def convert_to_one_hot(labels, num_classes=10):
 
 	return one_hot
 
-def forward_propagation(X, parameters, num_layers):    
+def forward_propagation(X, parameters):   
+	n_layers = len(parameters) // 2
+	print("n_layers = ",n_layers)
 	A = X;
-	for i in range(1,num_layers):
+	for i in range(1,n_layers):
 		# Retrieve the parameters from the dictionary "parameters" 
 		W = parameters['W'+str(i)]
 		b = parameters['b'+str(i)]
@@ -151,7 +152,7 @@ def forward_propagation(X, parameters, num_layers):
 		Z = tf.add(tf.matmul(W,A),b)
 
 		# Calculate activation only if 
-		if i is not num_layers:
+		if i is not n_layers:
 			A = tf.nn.relu(Z)
 	                                                         
 	# Return output of last linear unit to compute_cost
@@ -183,16 +184,20 @@ def create_minibatches(X_train, Y_train, minibatch_size):
 
 def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
-	ops.reset_default_graph()
+	tf.reset_default_graph()
 
 	n_x = X_train.shape[0]  # Number of pixels in each image / number of input features                
 	n_y = Y_train.shape[0]  # Number of classes (10 classes: digits 0-9)
 	m   = X_train.shape[1]  # Number of examples                       
 	costs = []              # Keep track of model's cost after each epoch for plotting
 
+	# Compute weights and biases matrix dimensions
+	layer_sizes = [28**2, 12, 12, 10] # Number of units per layer
+	nn_dims = compute_matrix_dims(layer_sizes)
+
 	# Construct Tensorflow graph
 	X, Y = create_placeholders(n_x, n_y)
-	parameters = initialize_parameters()
+	parameters = initialize_parameters(nn_dims)
 	lin_out = forward_propagation(X, parameters)
 	cost = compute_cost(lin_out, Y)
 	optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -265,7 +270,7 @@ def predict_on_test(trained_params):
 
 	# Construct Tensorflow graph
 	X, _ = create_placeholders(n_x, 10)
-	lin_out = forward_propagation(X_eval parameters)
+	lin_out = forward_propagation(X_eval, parameters)
 	predictions = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
 
 	with tf.Session as sess:
@@ -287,10 +292,6 @@ X_dev   = X_dev / 255.0
 # Convert labels to one-hot matrices
 Y_train = convert_to_one_hot(Y_train, 10)
 Y_dev   = convert_to_one_hot(Y_dev, 10)
-
-layer_sizes = [28**2, 12, 12, 10]
-nn_dims = compute_matrix_dims(layer_sizes)
-parameters = initialize_parameters(nn_dims)
 
 # Train model and calculate training/development set accuracies
 trained_params = model(X_train, Y_train, X_dev, Y_dev)
