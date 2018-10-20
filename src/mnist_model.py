@@ -28,13 +28,46 @@ def load_dataset():
 
 	return X_train, X_dev, Y_train, Y_dev
 
-def load_test_dataset():
+def load_eval_dataset():
 	'''
 	Load unlabeled dataset to produce predictions for online Kaggle MNIST submission.
 	'''
 	X_eval = np.load('../data/test.npy')
 
 	return X_eval
+
+def compute_matrix_dims(layer_sizes):
+	'''
+	Computes matrix dimensions for each layer
+
+	Arguments:
+	layer_sizes - List containing numbers of neurons in each layer
+
+	Asserts:
+	n_layers > 1 - Ensures model has at least 1 hidden layer
+
+	Returns:
+	nn_dims - Dictionary containing tuples of matrix shapes for each layer's weights
+		and biases
+
+	'''
+	nn_dims = {}
+	n_layers = len(layer_sizes)-1 # Input features don't count as a layer
+
+	# Ensure the presence of at least 1 hidden layer
+	assert n_layers >= 1
+
+	# Build nn_dims list holding matrix sizes
+	for i in range(0,n_layers):
+		layer_prev = layer_sizes[i]
+		layer_curr = layer_sizes[i+1]
+		nn_dims["W"+str(i+1)] = (layer_curr,layer_prev)
+		nn_dims['b'+str(i+1)] = (layer_curr,1)
+
+		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
+			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
+
+	return nn_dims
 
 def create_placeholders(n_x, n_y):
 	'''
@@ -220,19 +253,19 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 # TODO: DOES THIS WORK PROEPERLY???
 def predict_on_test(trained_params):
 	# Get unlabeled testing examples
-	X_test = load_test_dataset()
+	X_eval = load_eval_dataset()
 
 	# Normalize image vectors
-	X_test = X_test / 255.0
+	X_eval = X_eval / 255.0
 
 	ops.reset_default_graph()
 
-	n_x = X_test.shape[0]   # Number of pixels in each image / number of input features                                      
+	n_x = X_eval.shape[0]   # Number of pixels in each image / number of input features                                      
 	costs = []              # Keep track of model's cost after each epoch for plotting
 
 	# Construct Tensorflow graph
 	X, _ = create_placeholders(n_x, 10)
-	lin_out = forward_propagation(X_test, parameters)
+	lin_out = forward_propagation(X_eval parameters)
 	predictions = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
 
 	with tf.Session as sess:
@@ -243,65 +276,29 @@ def predict_on_test(trained_params):
 	# TODO: Conver this simple print statement to the output specification given by Kaggle
 	print(predictions)
 
-# MAIN COMPUTATION DRIVER
 
-# X_train, X_dev, Y_train, Y_dev = load_dataset()
+# MAIN COMPUTATION DRIVER
+X_train, X_dev, Y_train, Y_dev = load_dataset()
 
 # Normalize image vectors
-# X_train = X_train / 255.0
-# X_dev   = X_dev / 255.0
+X_train = X_train / 255.0
+X_dev   = X_dev / 255.0
 
 # Convert labels to one-hot matrices
-# Y_train = convert_to_one_hot(Y_train, 10)
-# Y_dev   = convert_to_one_hot(Y_dev, 10)
+Y_train = convert_to_one_hot(Y_train, 10)
+Y_dev   = convert_to_one_hot(Y_dev, 10)
 
-# Train model and calculate training/development set accuracies
-#trained_params = model(X_train, Y_train, X_dev, Y_dev)
-
-# Produce
-#predict_on_test(trained_params)
-
-# TEST: Setting up tensorflow graph with layer size specifications
-def compute_matrix_dims(layer_sizes):
-	'''
-	Computes matrix dimensions for each layer
-
-	Arguments:
-	layer_sizes - List containing numbers of neurons in each layer
-
-	Asserts:
-	n_layers > 2 - Ensures model is at least 2 layers deep
-
-	Returns:
-	nn_dims - Dictionary containing tuples of matrix shapes for each layer's weights
-		and biases
-
-	'''
-	nn_dims = {}
-	n_layers = len(layer_sizes)-1
-
-	# Ensure deep learning model
-	assert n_layers > 2
-
-	# Build nn_dims list holding matrix sizes
-	for i in range(0,n_layers):
-		layer_prev = layer_sizes[i]
-		layer_curr = layer_sizes[i+1]
-		nn_dims["W"+str(i+1)] = (layer_curr,layer_prev)
-		nn_dims['b'+str(i+1)] = (layer_curr,1)
-
-		print("W" + str(i+1) + " = " + str(nn_dims['W'+str(i+1)]) + ", "
-			+ "b" + str(i+1) + " = " + str(nn_dims['b'+str(i+1)]))
-
-	return nn_dims
-
-# TEST:
 layer_sizes = [28**2, 12, 12, 10]
 nn_dims = compute_matrix_dims(layer_sizes)
 parameters = initialize_parameters(nn_dims)
 
-for params in parameters:
-	print(params)
+# Train model and calculate training/development set accuracies
+trained_params = model(X_train, Y_train, X_dev, Y_dev)
+
+# Produce predictions for Kaggle evaluation
+predict_on_test(trained_params)
+
+
 
 
 
