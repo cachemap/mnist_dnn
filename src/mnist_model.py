@@ -1,5 +1,7 @@
-# Purpose: Construct, train, and test deep NN on MNIST handwritten number
+# Dillon Notz, 2018
+# Purpose: Construct, train, and test N-layer deep NN on MNIST handwritten number
 # dataset.
+# NN Architecture: LINEAR -> RELU -> LINEAR -> RELU -> LINEAR -> SOFTMAX
 
 import tensorflow as tf
 import numpy as np
@@ -17,8 +19,8 @@ def load_dataset():
 	X_data = data[:,1:]
 	Y_data = data[:,0].reshape((m,1))
 
-	# Split dataset into training set (70%) and development set (30%)
-	m_t = int(np.ceil(m * 0.7)); print('Number of examples in training set: ', m_t)
+	# Split dataset into training set (80%) and development set (20%)
+	m_t = int(np.ceil(m * 0.8)); print('Number of examples in training set: ', m_t)
 	m_d = m - m_t; print('Number of examples in development set: ', m_d)
 
 	X_train = X_data[:m_t,:].T
@@ -35,6 +37,10 @@ def load_eval_dataset():
 	X_eval = np.load('../data/test.npy')
 
 	return X_eval
+
+# Visualizes a few training examples to ensure correct construction
+def visualize_dataset():
+	None
 
 def compute_matrix_dims(layer_sizes):
 	'''
@@ -137,7 +143,7 @@ def convert_to_one_hot(labels, num_classes=10):
 	# Close the session
 	sess.close()
 
-	return one_hot
+	return np.squeeze(one_hot)
 
 def forward_propagation(X, parameters):   
 	n_layers = len(parameters) // 2
@@ -174,13 +180,21 @@ def compute_cost(logits, labels):
 	logits = tf.transpose(logits)
 	labels = tf.transpose(labels)
 
-	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
+	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels))
 
 	return cost
 
-def create_minibatches(X_train, Y_train, minibatch_size):
-	None
-	
+def create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem):
+	print("Number of minibatches: ", num_minibatches)
+	minibatches = []
+
+	for i in range(0,num_minibatches-1):
+		minibatches.append((X_train[:,i*minibatch_size:(i+1)*minibatch_size], Y_train[:,i*minibatch_size:(i+1)*minibatch_size]))
+
+	if(rem is not 0):
+		minibatches.append((X_train[:,num_minibatches*minibatch_size:], Y_train[:,num_minibatches*minibatch_size:]))
+
+	return minibatches
 
 def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
@@ -209,9 +223,14 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Run initialization
 		sess.run(init)
 
+		# DEBUG
+		print(X_train.shape)
+		print(Y_train.shape)
+
 		# Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
 		num_minibatches = int(m / minibatch_size)
-		minibatches = create_minibatches(X_train, Y_train, minibatch_size)
+		rem = m % minibatch_size;
+		minibatches = create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem)
 
 		# Mini-batch stochastic training loop...
 		for epoch in range(1,num_epochs):
