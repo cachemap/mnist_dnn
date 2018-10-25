@@ -261,7 +261,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	print ("Training complete!")
 
 	# Calculate the correct predictions
-	correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y))
+	correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y), name="predict-compare")
 
 	# Calculate accuracy on the test set
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
