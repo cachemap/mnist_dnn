@@ -220,6 +220,9 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	init = tf.global_variables_initializer()
 
 	with tf.Session() as sess:
+		# For TensorBoard visualization
+		writer ​=​ tf​.​summary​.​FileWriter​(​'./graphs',​ sess​.​graph)
+
 		# Run initialization
 		sess.run(init)
 
@@ -269,6 +272,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
 	print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
 
+	writer.close()
 	sess.close()
 
 	return parameters
