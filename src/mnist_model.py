@@ -5,6 +5,7 @@
 
 import tensorflow as tf
 import numpy as np
+import matlplotlib as plt
 
 # Loads 'X_train.npy' and 'Y_train.npy' to produce training and dev sets
 def load_dataset():
@@ -107,7 +108,7 @@ def initialize_parameters(nn_dims):
 
 	parameters = {}
 
-	for i in range(1,len(nn_dims)//2):
+	for i in range(1,len(nn_dims)//2 + 1):
 		w = 'W'+str(i); b = 'b'+str(i)
 		parameters[w] = tf.get_variable(w, nn_dims[w], initializer=tf.contrib.layers.xavier_initializer(seed = 1))
 		parameters[b] = tf.get_variable(b, nn_dims[b], initializer=tf.zeros_initializer())
@@ -145,11 +146,11 @@ def convert_to_one_hot(labels, num_classes=10):
 
 	return np.squeeze(one_hot)
 
-def forward_propagation(X, parameters):   
+def forward_propagation(X, parameters):  
 	n_layers = len(parameters) // 2
-	print("n_layers = ",n_layers)
+	
 	A = X;
-	for i in range(1,n_layers):
+	for i in range(1,n_layers+1):
 		# Retrieve the parameters from the dictionary "parameters" 
 		W = parameters['W'+str(i)]
 		b = parameters['b'+str(i)]
@@ -157,7 +158,7 @@ def forward_propagation(X, parameters):
 		# Z[l+1] = W[l]*A[l] + b[l]
 		Z = tf.add(tf.matmul(W,A),b)
 
-		# Calculate activation only if 
+		# Calculate activation for all layers except the last one
 		if i is not n_layers:
 			A = tf.nn.relu(Z)
 	                                                         
@@ -221,7 +222,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 
 	with tf.Session() as sess:
 		# For TensorBoard visualization
-		writer ​=​ tf​.​summary​.​FileWriter​(​'./graphs',​ sess​.​graph)
+		writer = tf.summary.FileWriter('./graphs', sess.graph)
 
 		# Run initialization
 		sess.run(init)
@@ -251,6 +252,8 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 				print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
 			if print_cost and epoch % 10 == 0:
 				costs.append(epoch_cost)
+
+	# TODO: Potentially save data for reloading???
 
 	# Plot costs over epochs
 	plt.plot(np.squeeze(costs))
