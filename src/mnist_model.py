@@ -5,7 +5,7 @@
 
 import tensorflow as tf
 import numpy as np
-import matlplotlib as plt
+import matplotlib.pyplot as plt
 
 # Loads 'X_train.npy' and 'Y_train.npy' to produce training and dev sets
 def load_dataset():
@@ -148,7 +148,7 @@ def convert_to_one_hot(labels, num_classes=10):
 
 def forward_propagation(X, parameters):  
 	n_layers = len(parameters) // 2
-	
+
 	A = X;
 	for i in range(1,n_layers+1):
 		# Retrieve the parameters from the dictionary "parameters" 
@@ -227,10 +227,6 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Run initialization
 		sess.run(init)
 
-		# DEBUG
-		print(X_train.shape)
-		print(Y_train.shape)
-
 		# Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
 		num_minibatches = int(m / minibatch_size)
 		rem = m % minibatch_size;
@@ -253,14 +249,12 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 			if print_cost and epoch % 10 == 0:
 				costs.append(epoch_cost)
 
-	# TODO: Potentially save data for reloading???
-
 	# Plot costs over epochs
 	plt.plot(np.squeeze(costs))
-	plt.ylabel('Cost')
+	plt.ylabel("Cost")
 	plt.xlabel("Iterations (Per 10 Iter.)")
 	plt.title("Learning rate =" + str(learning_rate))
-	plt.savefig('CostCurve_'+learning_rate)
+	plt.savefig("CostCurve_" + str(learning_rate) + ".png")
 
 	# Save trained parameters
 	parameters = sess.run(parameters)
@@ -281,7 +275,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	return parameters
 
 
-# TODO: DOES THIS WORK PROEPERLY???
+# TODO: DOES THIS WORK PROPERLY???
 def predict_on_test(trained_params):
 	# Get unlabeled testing examples
 	X_eval = load_eval_dataset()
@@ -304,7 +298,7 @@ def predict_on_test(trained_params):
 
 	sess.close()
 
-	# TODO: Conver this simple print statement to the output specification given by Kaggle
+	# TODO: Convert this simple print statement to the output specification given by Kaggle
 	print(predictions)
 
 
@@ -324,6 +318,8 @@ trained_params = model(X_train, Y_train, X_dev, Y_dev)
 
 # Produce predictions for Kaggle evaluation
 predict_on_test(trained_params)
+
+# TODO: Potentially save parameters to file for reuse
 
 
 
