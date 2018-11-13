@@ -186,7 +186,6 @@ def compute_cost(logits, labels):
 	return cost
 
 def create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem):
-	print("Number of minibatches: ", num_minibatches)
 	minibatches = []
 
 	for i in range(0,num_minibatches-1):
@@ -269,10 +268,11 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
 		print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
 
+		sess.close()
+		writer.close()
+
 	return parameters
 
-
-# TODO: DOES THIS WORK PROPERLY???
 def predict_on_test(trained_params):
 	# Get unlabeled testing examples
 	X_eval = load_eval_dataset()
@@ -283,23 +283,21 @@ def predict_on_test(trained_params):
 	tf.reset_default_graph()
 
 	n_x = X_eval.shape[0]   # Number of pixels in each image / number of input features                                      
-	costs = []              # Keep track of model's cost after each epoch for plotting
 
 	# Construct Tensorflow graph
 	X, _ = create_placeholders(n_x, 10)
-	lin_out = forward_propagation(X_eval, parameters)
+	lin_out = forward_propagation(X_eval, trained_params)
 	predictions = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
 
 	with tf.Session as sess:
 		sess.run(predictions)
-
-	sess.close()
+		sess.close()
 
 	# TODO: Convert this simple print statement to the output specification given by Kaggle
 	print(predictions)
 
 
-# MAIN COMPUTATION DRIVER
+# TODO: MOVE THIS TO ANOTHER FILE
 X_train, X_dev, Y_train, Y_dev = load_dataset()
 
 # Normalize image vectors
@@ -314,6 +312,11 @@ Y_dev   = convert_to_one_hot(Y_dev, 10)
 trained_params = model(X_train, Y_train, X_dev, Y_dev)
 
 # TODO: Save trained_parameters to file for easy reuse
+np.save('./trained_parameters.npy', trained_params)
+
+print(trained_params) # DEBUG: investigate what this looks like
+
+
 
 # Produce predictions for Kaggle evaluation
 predict_on_test(trained_params)
