@@ -249,28 +249,25 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 			if print_cost and epoch % 10 == 0:
 				costs.append(epoch_cost)
 
-	# Plot costs over epochs
-	plt.plot(np.squeeze(costs))
-	plt.ylabel("Cost")
-	plt.xlabel("Iterations (Per 10 Iter.)")
-	plt.title("Learning rate =" + str(learning_rate))
-	plt.savefig("CostCurve_" + str(learning_rate) + ".png")
+		# Plot costs over epochs
+		plt.plot(np.squeeze(costs))
+		plt.ylabel("Cost")
+		plt.xlabel("Iterations (Per 10 Iter.)")
+		plt.title("Learning rate =" + str(learning_rate))
+		plt.savefig("CostCurve_" + str(learning_rate) + ".png")
 
-	# Save trained parameters
-	parameters = sess.run(parameters)
-	print ("Training complete!")
+		# Save trained parameters
+		parameters = sess.run(parameters)
+		print ("Training complete!")
 
-	# Calculate the correct predictions
-	correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y), name="predict-compare")
+		# Calculate the correct predictions
+		correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y), name="predict-compare")
 
-	# Calculate accuracy on the test set
-	accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+		# Calculate accuracy on the test set
+		accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-	print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
-	print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
-
-	writer.close()
-	sess.close()
+		print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
+		print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
 
 	return parameters
 
@@ -283,7 +280,7 @@ def predict_on_test(trained_params):
 	# Normalize image vectors
 	X_eval = X_eval / 255.0
 
-	ops.reset_default_graph()
+	tf.reset_default_graph()
 
 	n_x = X_eval.shape[0]   # Number of pixels in each image / number of input features                                      
 	costs = []              # Keep track of model's cost after each epoch for plotting
@@ -316,10 +313,12 @@ Y_dev   = convert_to_one_hot(Y_dev, 10)
 # Train model and calculate training/development set accuracies
 trained_params = model(X_train, Y_train, X_dev, Y_dev)
 
+# TODO: Save trained_parameters to file for easy reuse
+
 # Produce predictions for Kaggle evaluation
 predict_on_test(trained_params)
 
-# TODO: Potentially save parameters to file for reuse
+
 
 
 
