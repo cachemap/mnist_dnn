@@ -7,8 +7,40 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
+# TODO: make larger dataset visualization function
+
+# Visualizes a few training examples to ensure correct construction
+def visualize_dataset():
+	None
+
+# TODO: make a function that prints all images that don't work to a new directory
+#       named with information about the configuration
+
+def visualize_errors():
+	None
+
+def draw_image(arr, label_num):
+	# Use matplotlib to save example as an image
+	img = arr.reshape((28,28))
+	plt.imshow(img)
+	plt.draw()
+	plt.savefig('input_image')
+	print("Image label = ",int(label_num))
+
+# Imports Kaggle's MNIST handwritten digit dataset files to numpy arrays,
+# then stores these as clean numpy ".npy" binaries for easier handling
+# in TensorFlow.
+def import_dataset():
+	# Load data from dataset ("train" is labeled, "test" is unlabelled)
+	train = np.genfromtxt('../data/csv/train.csv', delimiter=',', skip_header=1)
+	test  = np.genfromtxt( '../data/csv/test.csv', delimiter=',', skip_header=1)
+
+	# Save files to /digit_recognition/data for efficiently loading into main Tensorflow project
+	np.save('../train.npy', train)
+	np.save( '../test.npy',  test)
+
 # Loads 'X_train.npy' and 'Y_train.npy' to produce training and dev sets
-def load_dataset():
+def load_dataset(split_ratio=0.8):
 	# Load data from file
 	data = np.load('../data/train.npy')
 
@@ -21,7 +53,7 @@ def load_dataset():
 	Y_data = data[:,0].reshape((m,1))
 
 	# Split dataset into training set (80%) and development set (20%)
-	m_t = int(np.ceil(m * 0.8)); print('Number of examples in training set: ', m_t)
+	m_t = int(np.ceil(m * split_ratio)); print('Number of examples in training set: ', m_t)
 	m_d = m - m_t; print('Number of examples in development set: ', m_d)
 
 	X_train = X_data[:m_t,:].T
@@ -33,15 +65,11 @@ def load_dataset():
 
 def load_eval_dataset():
 	'''
-	Load unlabeled dataset to produce predictions for online Kaggle MNIST submission.
+	Load unlabeled dataset to produce predictions for online Kaggle MNIST submission
 	'''
 	X_eval = np.load('../data/test.npy')
 
 	return X_eval
-
-# Visualizes a few training examples to ensure correct construction
-def visualize_dataset():
-	None
 
 def compute_matrix_dims(layer_sizes):
 	'''
@@ -219,6 +247,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	# Initialize all the variables
 	init = tf.global_variables_initializer()
 
+	# Run Tensorflow Session
 	with tf.Session() as sess:
 		# For TensorBoard visualization
 		writer = tf.summary.FileWriter('./graphs', sess.graph)
@@ -295,31 +324,6 @@ def predict_on_test(trained_params):
 
 	# TODO: Convert this simple print statement to the output specification given by Kaggle
 	print(predictions)
-
-
-# TODO: MOVE THIS TO ANOTHER FILE
-X_train, X_dev, Y_train, Y_dev = load_dataset()
-
-# Normalize image vectors
-X_train = X_train / 255.0
-X_dev   = X_dev / 255.0
-
-# Convert labels to one-hot matrices
-Y_train = convert_to_one_hot(Y_train, 10)
-Y_dev   = convert_to_one_hot(Y_dev, 10)
-
-# Train model and calculate training/development set accuracies
-trained_params = model(X_train, Y_train, X_dev, Y_dev)
-
-# TODO: Save trained_parameters to file for easy reuse
-np.save('./trained_parameters.npy', trained_params)
-
-print(trained_params) # DEBUG: investigate what this looks like
-
-
-
-# Produce predictions for Kaggle evaluation
-predict_on_test(trained_params)
 
 
 
