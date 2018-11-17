@@ -1,3 +1,5 @@
+from mnist_model_deep import *
+
 X_train, X_dev, Y_train, Y_dev = load_dataset()
 
 # Normalize image vectors
@@ -15,8 +17,6 @@ trained_params = model(X_train, Y_train, X_dev, Y_dev)
 np.save('./trained_parameters.npy', trained_params)
 
 print(trained_params) # DEBUG: investigate what this looks like
-
-
 
 # Produce predictions for Kaggle evaluation
 predict_on_test(trained_params)
