@@ -6,6 +6,7 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+from time import process_time
 
 # TODO: make larger dataset visualization function
 
@@ -232,11 +233,11 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	nn_dims = compute_matrix_dims(layer_sizes)
 
 	# Construct Tensorflow graph
-	X, Y = create_placeholders(n_x, n_y)
+	X, Y       = create_placeholders(n_x, n_y)
 	parameters = initialize_parameters(nn_dims)
-	lin_out = forward_propagation(X, parameters)
-	cost = compute_cost(lin_out, Y)
-	optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+	lin_out    = forward_propagation(X, parameters)
+	cost       = compute_cost(lin_out, Y)
+	optimizer  = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 	# Initialize all the variables
 	init = tf.global_variables_initializer()
@@ -249,10 +250,13 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Run initialization
 		sess.run(init)
 
+		bef = process_time()	# Time minibatch creation time
 		# Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
 		num_minibatches = int(m / minibatch_size)
 		rem = m % minibatch_size;
 		minibatches = create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem)
+		aft = process_time(); diff = aft-bef   
+		print("Minibatch Creation Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
 
 		# Mini-batch stochastic training loop...
 		for epoch in range(1,num_epochs):
@@ -326,20 +330,28 @@ def predict_on_test(trained_params):
 
 # Visualize the incorrectly identified indices
 def visualize_errors(data, indices):
-	plt.figure()
+	# TEMPORARY, just make a bunch of image files and store in a file
 	for index in indices:
-		# Get correct label
+		img = data[index].reshape((28,28))
+		plt.imshow(img)
+		plt.draw()
+		# Need to specify the directory
+		plt.savefig(str(index) + "_")
 
-		# Get erroneous label
+	# for index in indices:
+	# 	# Get correct label
 
-		# Get pixel data
 
-		# Draw image to subplot
-		plt.subplot(index)
+	# 	# Get erroneous label
 
-		# Place label information in title
+	# 	# Get pixel data
 
-		# Save figure out to file???
+	# 	# Draw image to subplot
+	# 	plt.subplot(index)
+
+	# 	# Place label information in title
+
+	# 	# Save figure out to file???
 
 
 
