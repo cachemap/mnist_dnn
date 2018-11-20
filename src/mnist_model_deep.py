@@ -13,12 +13,6 @@ import matplotlib.pyplot as plt
 def visualize_dataset():
 	None
 
-# TODO: make a function that prints all images that don't work to a new directory
-#       named with information about the configuration
-
-def visualize_errors():
-	None
-
 def draw_image(arr, label_num):
 	# Use matplotlib to save example as an image
 	img = arr.reshape((28,28))
@@ -294,13 +288,18 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Calculate accuracy on the test set
 		accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
+		# Acquire indices of incorrectly labeled examples
+		errors = tf.where(tf.not_equal(tf.argmax(lin_out), tf.argmax(Y)))
+		errors = errors.eval({X: X_dev, Y: Y_dev}) # TODO: .squeeze here?
+		errors = errors.squeeze()
+
 		print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
 		print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
 
 		sess.close()
 		writer.close()
 
-	return parameters
+	return parameters, errors
 
 def predict_on_test(trained_params):
 	# Get unlabeled testing examples
@@ -324,6 +323,24 @@ def predict_on_test(trained_params):
 
 	# TODO: Convert this simple print statement to the output specification given by Kaggle
 	print(predictions)
+
+# Visualize the incorrectly identified indices
+def visualize_errors(data, indices):
+	plt.figure()
+	for index in indices:
+		# Get correct label
+
+		# Get erroneous label
+
+		# Get pixel data
+
+		# Draw image to subplot
+		plt.subplot(index)
+
+		# Place label information in title
+
+		# Save figure out to file???
+
 
 
 

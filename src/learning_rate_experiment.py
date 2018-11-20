@@ -10,8 +10,10 @@ X_dev   = X_dev / 255.0
 Y_train = convert_to_one_hot(Y_train, 10)
 Y_dev   = convert_to_one_hot(Y_dev, 10)
 
+paramters, errors = model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.005,
+	                      num_epochs = 500, minibatch_size = 32, print_cost = True)
 # Try out different learning rates on the same model
-print(np.linspace(0.0001, 0.01, num=5))
-for l_r in np.linspace(0.0001, 0.01, num=5):
-	model(X_train, Y_train, X_dev, Y_dev, learning_rate = l_r,
-	      num_epochs = 2000, minibatch_size = 32, print_cost = True)
+# rates = np.linspace(.0002, .001, 9)
+# for l_r in rates:
+#	model(X_train, Y_train, X_dev, Y_dev, learning_rate = l_r,
+#	      num_epochs = 1500, minibatch_size = 32, print_cost = True)
