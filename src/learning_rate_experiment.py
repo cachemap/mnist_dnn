@@ -21,3 +21,5 @@ parameters, errors = model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.000
 # for l_r in rates:
 #	model(X_train, Y_train, X_dev, Y_dev, learning_rate = l_r,
 #	      num_epochs = 1500, minibatch_size = 32, print_cost = True)
+
+visualize_errors(X_dev, Y_dev, errors)

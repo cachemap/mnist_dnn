@@ -259,6 +259,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		print("Minibatch Creation Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
 
 		# Mini-batch stochastic training loop...
+		bef = process_time()	# Time training time
 		for epoch in range(1,num_epochs):
 			epoch_cost = 0.0
 
@@ -274,6 +275,8 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 				print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
 			if print_cost and epoch % 10 == 0:
 				costs.append(epoch_cost)
+		aft = process_time(); diff = aft-bef   
+		print("Training Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
 
 		# Plot costs over epochs
 		plt.plot(np.squeeze(costs))
@@ -296,6 +299,9 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		errors = tf.where(tf.not_equal(tf.argmax(lin_out), tf.argmax(Y)))
 		errors = errors.eval({X: X_dev, Y: Y_dev}) # TODO: .squeeze here?
 		errors = errors.squeeze()
+
+		# Acquire values of incorrectly labels examples?
+		# Or just get labels of all values???
 
 		print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
 		print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
@@ -329,14 +335,16 @@ def predict_on_test(trained_params):
 	print(predictions)
 
 # Visualize the incorrectly identified indices
-def visualize_errors(data, indices):
+# Indices are into X_dev
+def visualize_errors(data, labels, indices):
 	# TEMPORARY, just make a bunch of image files and store in a file
 	for index in indices:
 		img = data[index].reshape((28,28))
+		plt.title("Label = " + str(labels[index]) + ", Answer = " + str())
 		plt.imshow(img)
 		plt.draw()
 		# Need to specify the directory
-		plt.savefig(str(index) + "_")
+		plt.savefig(str(index) + "_" + str())
 
 	# for index in indices:
 	# 	# Get correct label
