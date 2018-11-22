@@ -339,12 +339,11 @@ def predict_on_test(trained_params):
 def visualize_errors(data, labels, indices):
 	# TEMPORARY, just make a bunch of image files and store in a file
 	for index in indices:
-		img = data[index].reshape((28,28))
-		plt.title("Label = " + str(labels[index]) + ", Answer = " + str())
+		img = data[:,index,].reshape((28,28))
+		#plt.title("Label = " + str(labels[index]) + ", Answer = " + str())
 		plt.imshow(img)
-		plt.draw()
-		# Need to specify the directory
-		plt.savefig(str(index) + "_" + str())
+		#plt.draw()
+		plt.savefig("./error_images/" + str(index))
 
 	# for index in indices:
 	# 	# Get correct label
