@@ -229,7 +229,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 	costs = []              # Keep track of model's cost after each epoch for plotting
 
 	# Compute weights and biases matrix dimensions
-	layer_sizes = [28**2, 12, 12, 10] # Number of units per layer
+	layer_sizes = [28**2, 14, 14, 10] # Number of units per layer
 	nn_dims = compute_matrix_dims(layer_sizes)
 
 	# Construct Tensorflow graph
@@ -256,12 +256,13 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		rem = m % minibatch_size;
 		minibatches = create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem)
 		aft = process_time(); diff = aft-bef   
-		print("Minibatch Creation Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
+		print ("Minibatch Creation Time: {0:.5f} s | {1:.5f} min".format(diff, diff/60))
 
 		# Mini-batch stochastic training loop...
 		bef = process_time()	# Time training time
-		for epoch in range(1,num_epochs):
+		for epoch in range(1,num_epochs+1):
 			epoch_cost = 0.0
+			epoch_bef = process_time()
 
 			for minibatch in minibatches:
 				(minibatch_X, minibatch_Y) = minibatch
@@ -272,11 +273,13 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 
 			# Print the cost every 100 epochs
 			if print_cost and epoch % 100 == 0:
-				print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
+				print ("Cost after epoch %i: %f" % (epoch, epoch_cost), end = " ")
+				epoch_aft = process_time(); epoch_diff = epoch_aft-epoch_before
+				print ("| {0:.5f} s | {1:.5f} min".format(diff, diff/60))
 			if print_cost and epoch % 10 == 0:
 				costs.append(epoch_cost)
 		aft = process_time(); diff = aft-bef   
-		print("Training Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
+		print("Total Training Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
 
 		# Plot costs over epochs
 		plt.plot(np.squeeze(costs))
@@ -285,11 +288,14 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		plt.title("Learning rate =" + str(learning_rate))
 		plt.savefig("CostCurve_" + str(learning_rate) + ".png")
 
-		# Save trained parameters
+		# Acquire trained parameters
 		parameters = sess.run(parameters)
 		print ("Training complete!")
 
-		# Calculate the correct predictions
+		# Calculate the number of correct predictions
+		predictions = tf.argmax(lin_out)
+		predictions = predictions.eval({X: X_dev, Y: Y_dev}).squeeze()
+		print(predictions) # DEBUG, for visual confirmation that it's one hot or not
 		correct_prediction = tf.equal(tf.argmax(lin_out), tf.argmax(Y), name="predict-compare")
 
 		# Calculate accuracy on the test set
@@ -297,11 +303,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 
 		# Acquire indices of incorrectly labeled examples
 		errors = tf.where(tf.not_equal(tf.argmax(lin_out), tf.argmax(Y)))
-		errors = errors.eval({X: X_dev, Y: Y_dev}) # TODO: .squeeze here?
-		errors = errors.squeeze()
-
-		# Acquire values of incorrectly labels examples?
-		# Or just get labels of all values???
+		errors = errors.eval({X: X_dev, Y: Y_dev}).squeeze() # TODO: .squeeze here?
 
 		print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
 		print ("Dev Accuracy:", accuracy.eval({X: X_dev, Y: Y_dev}))
@@ -309,7 +311,7 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		sess.close()
 		writer.close()
 
-	return parameters, errors
+	return parameters, errors, predictions
 
 def predict_on_test(trained_params):
 	# Get unlabeled testing examples
@@ -333,6 +335,14 @@ def predict_on_test(trained_params):
 
 	# TODO: Convert this simple print statement to the output specification given by Kaggle
 	print(predictions)
+
+	# printToFile("ImageId,Label")
+	# for i in range(len(predictions)):
+	#     printToFile(i,predictions[i])
+
+# Compare predicted values with incorrect labels
+def compare_predictions_with_labels(labels, indices):
+	None
 
 # Visualize the incorrectly identified indices
 # Indices are into X_dev
@@ -359,6 +369,10 @@ def visualize_errors(data, labels, indices):
 	# 	# Place label information in title
 
 	# 	# Save figure out to file???
+
+#
+def analyze_errors():
+	None
 
 
 
