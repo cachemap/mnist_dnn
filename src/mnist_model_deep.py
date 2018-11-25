@@ -250,37 +250,39 @@ def model(X_train, Y_train, X_dev, Y_dev, learning_rate = 0.0001,
 		# Run initialization
 		sess.run(init)
 
-		bef = process_time()	# Time minibatch creation time
-		# Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
-		num_minibatches = int(m / minibatch_size)
-		rem = m % minibatch_size;
-		minibatches = create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem)
-		aft = process_time(); diff = aft-bef   
-		print ("Minibatch Creation Time: {0:.5f} s | {1:.5f} min".format(diff, diff/60))
+		# bef = process_time()	# Time minibatch creation time
+		# # Form minibatches (random shuffling not needed since dataset is shuffled during load_dataset())
+		# num_minibatches = int(m / minibatch_size)
+		# rem = m % minibatch_size;
+		# minibatches = create_minibatches(X_train, Y_train, num_minibatches, minibatch_size, rem)
+		# aft = process_time(); diff = aft-bef   
+		# print ("Minibatch Creation Time: {0:.5f} s | {1:.5f} min".format(diff, diff/60))
 
-		# Mini-batch stochastic training loop...
-		bef = process_time()	# Time training time
-		for epoch in range(1,num_epochs+1):
-			epoch_cost = 0.0
-			epoch_bef = process_time()
+		# # Mini-batch stochastic training loop...
+		# bef = process_time()	# Time training time
+		# epoch_bef = bef
+		# for epoch in range(1,num_epochs+1):
+		# 	epoch_cost = 0.0
 
-			for minibatch in minibatches:
-				(minibatch_X, minibatch_Y) = minibatch
+		# 	for minibatch in minibatches:
+		# 		(minibatch_X, minibatch_Y) = minibatch
 
-				_, minibatch_cost = sess.run([optimizer,cost], feed_dict={X: minibatch_X, Y: minibatch_Y})
+		# 		_, minibatch_cost = sess.run([optimizer,cost], feed_dict={X: minibatch_X, Y: minibatch_Y})
 
-				epoch_cost += minibatch_cost / num_minibatches
+		# 		epoch_cost += minibatch_cost / num_minibatches
+ 
+		# 	# Print the cost and computation time per 100 epochs
+		# 	if print_cost and epoch % 100 == 0:
+		# 		print ("Cost after epoch %i: %f" % (epoch, epoch_cost), end = " ")
+		# 		epoch_aft = process_time(); epoch_diff = epoch_aft-epoch_bef
+		# 		epoch_bef = process_time()
+		# 		print ("| {0:.5f} s | {1:.5f} min".format(epoch_diff, epoch_diff/60))
+		# 	if print_cost and epoch % 10 == 0:
+		# 		costs.append(epoch_cost)
+		# aft = process_time(); diff = aft-bef   
+		# print("Total Training Time: {0:.2f} s , {1:.2f} min".format(diff, diff/60))
 
-			# Print the cost every 100 epochs
-			if print_cost and epoch % 100 == 0:
-				print ("Cost after epoch %i: %f" % (epoch, epoch_cost), end = " ")
-				epoch_aft = process_time(); epoch_diff = epoch_aft-epoch_before
-				print ("| {0:.5f} s | {1:.5f} min".format(diff, diff/60))
-			if print_cost and epoch % 10 == 0:
-				costs.append(epoch_cost)
-		aft = process_time(); diff = aft-bef   
-		print("Total Training Time: {0:.2f} s | {1:.2f} min".format(diff, diff/60))
-
+		parameters = np.load('trained_parameters.npy')
 		# Plot costs over epochs
 		plt.plot(np.squeeze(costs))
 		plt.ylabel("Cost")
@@ -346,17 +348,34 @@ def compare_predictions_with_labels(labels, indices):
 
 # Visualize the incorrectly identified indices
 # Indices are into X_dev
-def visualize_errors(data, labels, indices):
+def visualize_errors(data, labels, predictions, indices):
 	# TEMPORARY, just make a bunch of image files and store in a file
-	for index in indices:
-		img = data[:,index,].reshape((28,28))
-		#plt.title("Label = " + str(labels[index]) + ", Answer = " + str())
-		plt.imshow(img)
-		#plt.draw()
-		plt.savefig("./error_images/" + str(index))
-
 	# for index in indices:
-	# 	# Get correct label
+	# 	img = data[:,index].reshape((28,28))
+	# 	#plt.title("Label = " + str(labels[index]) + ", Answer = " + str())
+	# 	plt.imshow(img)
+	# 	#plt.draw()
+	# 	plt.savefig("./error_images/" + str(index))
+
+	# Better
+	count = 0 
+	for i, index in enumerate(indices):
+	 	# Get correct labels, 
+	 	label_val = labels[index]
+	 	mispr_val = predictions[index]
+	 	img = data[:,index]
+
+	 	plt.subplot("55" + str(i))
+	 	plt.imshow(img)
+	 		# TODO: Write Title - "actual value" x "mispredicted value"
+
+	 	# Print first 25 images
+	 	count += 1
+	 	if count == 25:
+	 		break;
+
+	# Save figure to file
+	plot.savefig("./error_images")
 
 
 	# 	# Get erroneous label
